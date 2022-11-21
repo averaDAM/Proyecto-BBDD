@@ -127,11 +127,75 @@ Este fichero debe tener todas las órdenes necesarias para realizar las operacio
 
 /*INSERCIONES: Realiza todas las inserciones necesarias para que el resultado de las consultas arroje varios resultados, pero no todos los registros de una tabla.*/
 /*CONSULTAS: Nota: Se incluirá como comentario el enunciado de cada consulta.*/
+/*1.	Muestra cuántas armas de cada tipo hay. Se debe mostrar la cantidad al lado de cada uno de los tipos*/
+SELECT tipo, COUNT(*) AS "Cantidad" FROM armas GROUP BY tipo;
 
+/*2.	Muestra el id, nombre, fecha de nacimiento y edad de cada uno de los personajes.*/
+SELECT id, nombre, fecha_nacimiento, YEAR(NOW()) - YEAR(fecha_nacimiento) AS "Edad" FROM personajes;
 
+/*3.	Muestra cuántos personajes existen por cada color de pelo.*/
+SELECT color_pelo, COUNT(*) FROM personajes GROUP BY color_pelo;
+
+/*4.	Muestra cuántas armas existen que empiecen por cada letra del abecedario.*/
+SELECT tipo, COUNT(*) AS "Cantidad" FROM armas GROUP BY LEFT(tipo, 1);
+
+/*5.	Muestra las tres razas que mayor altura tienen.*/
+SELECT nombre, altura_media FROM razas ORDER BY altura_media DESC LIMIT 3;
 
 /*PROCEDIMIENTOS ALMACENADOS (RA5)
 Órdenes necesarias para implementar y ejecutar los procedimientos almacenados descritos en los enunciados.
 Notas: 
 - Se incluirá como comentario el enunciado cada script.
 - Todos los procedimientos, funciones, triggers, etc. deberán contar con sentencias (CALL, etc.) que permitan comprobar su funcionamiento.*/
+
+/*1.	Escribe un procedimiento almacenado que reciba como parámetro dos variables, LimitInf y LimitSup,
+como los límites de altura por arriba y por abajo, y calcule cuantas razas existen cuya altura media se
+encuentre en ese rango. Debe mostrar un mensaje de la siguiente manera: Existen X razas por encima de LimitInf y por debajo de LimitSup.
+*/
+
+DELIMITER $$
+CREATE PROCEDURE getAltura(LimitInf DECIMAL(3,2), LimitSup DECIMAL(3,2))
+BEGIN
+    DECLARE texto1 varchar(100) DEFAULT "Existen ";
+    DECLARE texto2 varchar(100) DEFAULT " razas por encima de LimitInf y por debajo de LimitSup.";
+    
+	SELECT CONCAT(texto1, COUNT(*), texto2) AS "Resultado" FROM razas WHERE altura_media >= LimitInf AND altura_media <= LimitSup;
+END $$
+DELIMITER ;
+
+CALL getAltura(1.20, 1.72);
+
+/*2.	Escribe un procedimiento almacenado que reciba un parámetro FechaActual y calcule el total
+ de personajes muertos en una fecha dada y muestre un mensaje de la siguiente manera:
+ "Para la fecha X hay un total de X personajes muertos".*/
+ 
+DELIMITER $$
+CREATE PROCEDURE totalMuertos(FechaActual DATE)
+BEGIN
+    DECLARE texto1 varchar(100) DEFAULT "Para la fecha ";
+    DECLARE texto2 varchar(100) DEFAULT " hay un total de ";
+    DECLARE texto3 varchar(100) ;
+    
+    SET texto3 = ' personajes muertos';
+    
+	SELECT CONCAT( texto1, FechaActual, texto2, COUNT(*), texto3 ) AS "Resultado" FROM personajes WHERE fecha_muerte = FechaActual;
+END $$
+DELIMITER ;
+
+CALL totalMuertos('1544-6-12');
+
+/*3.	Escribe un procedimiento almacenado que reciba un carácter consistente en una letra
+ y muestre el siguiente mensaje: "Existen X personajes que poseen un nombre que empiezan
+ por la letra X".*/
+
+DELIMITER $$
+CREATE PROCEDURE letraEnNombre(caracter varchar(1))
+BEGIN
+	DECLARE texto1 varchar(100) DEFAULT "Existen ";
+    DECLARE texto2 varchar(100) DEFAULT " personajes que poseen un nombre que empiezan por la letra ";
+    
+	SELECT CONCAT(texto1, COUNT(*), texto2, caracter) AS "Resultado" FROM personajes WHERE nombre LIKE CONCAT("%", caracter, "%");
+END $$
+DELIMITER ;
+
+CALL letraEnNombre('a');
